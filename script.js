@@ -2,6 +2,7 @@ let currentOrder = [];
 let salesHistory = {};
 let adminTouchCount = 0;
 const adminPassword = "2408";
+const BASE_URL = 'http://localhost:5000';
 
 // 날짜 생성 함수
 function generateDates(startDate, endDate) {
@@ -124,14 +125,37 @@ function addToOrder(product) {
 function saveOrder(order) {
     const date = new Date().toISOString().split('T')[0];
     const time = new Date().toLocaleTimeString();
-    
-    order.forEach(item => {
-        salesHistory[date].push({
-            time: time,
-            item: item.name,
-            quantity: item.quantity,
-            price: item.price * item.quantity
-        });
+
+    const orderData = order.map(item => ({
+        time: time,
+        item: item.name,
+        quantity: item.quantity,
+        price: item.price * item.quantity
+    }));
+    console.log(JSON.stringify({
+        date: date,
+        order: orderData
+    }));
+    fetch(`${BASE_URL}/Selling/buy`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            date: date,
+            order: orderData
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Order saved:', data);
+        alert('주문이 완료되었습니다!');
+        currentOrder = [];
+        updateOrderSummary();
+    })
+    .catch(error => {
+        console.error('Error saving order:', error);
+        alert('주문을 저장하는 중 오류가 발생했습니다.');
     });
 }
 
